@@ -1,13 +1,6 @@
 const mongoose = require("mongoose");
 
-const Schema = mongoose.Schema;
-
-const bookSchema = new Schema({
-  bookid: {
-    type: Number,
-    required: true,
-    unique: true,
-  },
+const bookSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -23,13 +16,30 @@ const bookSchema = new Schema({
     type: Number,
     required: true,
   },
+  bookstate_int: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
   bookstate: {
     type: String,
     required: true,
   },
-  requestedBy: {
-    type: Number,
+  requestedby: {
+    type: String,
     required: true,
+  },
+  requestedat: {
+    type : Date,
+    default: Date.now
+  },
+  handledby: {
+    type: String
+  },
+  isAuthorised: {
+    type: Boolean,
+    required: true,
+    default: false
   },
 });
 
