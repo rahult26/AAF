@@ -49,30 +49,30 @@ function getColumns(cookies, pagetype, filterableColumns){
         col: "price"
       },
       {
-        name: 'Requested time',
+        name: 'Requested date and time',
         selector: row => row.requestedat,
         sortable: true,
         filter: true,
         col: "requestedat"
       },
       {
-        name: 'Employee Handling',
+        name: 'Employee handling',
         selector: row => row.handledby,
         sortable: true,
         filter: true,
         col: "handledby"
       },
       {
-        name: 'Book state',
+        name: 'Book status',
         selector: row => row.bookstate,
         sortable: true,
         filter: true,
-        col: "bookstate"
+        col: "bookstatus"
       },
     ];
     if(cookies.usertype !== "user"){
       columns.push({
-        name: 'Requested By',
+        name: 'Requested by',
         selector: row => row.requestedby,
         sortable: true,
         filter: true,
