@@ -49,30 +49,30 @@ function getColumns(cookies, pagetype, filterableColumns){
         col: "price"
       },
       {
-        name: 'Requested date and time',
+        name: 'Requested time',
         selector: row => row.requestedat,
         sortable: true,
         filter: true,
         col: "requestedat"
       },
       {
-        name: 'Employee handling',
+        name: 'Employee Handling',
         selector: row => row.handledby,
         sortable: true,
         filter: true,
         col: "handledby"
       },
       {
-        name: 'Book status',
+        name: 'Book state',
         selector: row => row.bookstate,
         sortable: true,
         filter: true,
-        col: "bookstatus"
+        col: "bookstate"
       },
     ];
     if(cookies.usertype !== "user"){
       columns.push({
-        name: 'Requested by',
+        name: 'Requested By',
         selector: row => row.requestedby,
         sortable: true,
         filter: true,
@@ -315,6 +315,7 @@ const Showtable = (props) => {
   const columns = getColumns(cookies, pagetype, filterableColumns);
 
   useEffect(() => {
+    setData([])
     if(cookies.usertype ==="admin" && pagetype === "users")
       getUserData(cookies).then((data) => setData(data));
     else if(pagetype === "home")
@@ -356,6 +357,24 @@ const Showtable = (props) => {
           </div>
           <div className="datatable border rounded">
             <DataTable
+              conditionalRowStyles={
+                [
+                  {
+                    when: (row) => row.bookstate_int === 5,
+                    style: {
+                      backgroundColor: "seagreen",
+                      color: "white",
+                    }
+                  },
+                  {
+                    when: (row) => row.bookstate_int === 8,
+                    style: {
+                      backgroundColor: "darkred",
+                      color: "white",
+                    }
+                  },
+                ]
+              }
               columns={columns}
               data={filteredData}
               pagination

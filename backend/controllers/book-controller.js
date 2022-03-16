@@ -1,3 +1,4 @@
+const User = require("../models/User");
 const Book = require("../models/Book");
 const BookHistory = require("../models/BookHistory");
 const nodemailer = require('nodemailer');
@@ -16,7 +17,7 @@ const insertBookHistory = async (username, book) =>{
   }
 }
 
-const sendEmail = async (id, bookstate) => {
+const sendEmail = async (id, bookstate, email) => {
   try{
     /*
       To use this email service, go to this link and turn off the less secure app access for this gmail account
@@ -31,20 +32,20 @@ const sendEmail = async (id, bookstate) => {
         },
         secure: true,
     });
-    console.log(process.env.EMAIL)
-    console.log(process.env.PASSWORD)
     const mailData = {
         from: process.env.EMAIL,
-        to: "codingfever44@gmail.com",
+        to: email,
         subject: `Status of your book ${id} has been changed`,
         text: bookstate,
     };
 
     transporter.sendMail(mailData, (error, info) => {
-      if (error) {
-        return console.log(error);
+      if (error){
+        console.log("Mail could not be sent because of this error");
+        console.log(error);
+      } else{
+        console.log({ message: "Mail send", message_id: info.messageId });
       }
-      console.log({ message: "Mail send", message_id: info.messageId });
     });
   } catch (err) {
     console.log("Mail could not be sent because of this error");
@@ -53,10 +54,10 @@ const sendEmail = async (id, bookstate) => {
 }
 
 const getAllBookRequests = async (req, res, next) => {
-  let books;
-  if(!req.cookies)return res.status(400).send("No book requests found");
-  usertype = req.cookies.usertype;
   try {
+    let books;
+    if(!req.cookies || !req.cookies.username)return res.status(400).send("Login first");
+    usertype = req.cookies.usertype;
     if(usertype == "user")
       books = await Book.find({requestedby: req.cookies.username});
     else
@@ -69,9 +70,10 @@ const getAllBookRequests = async (req, res, next) => {
 };
 
 const getBookById = async (req, res, next) => {
-  const id = req.params.id;
-  let book;
   try {
+    if(!req.cookies || !req.cookies.username)return res.status(400).send("Login first");
+    const id = req.params.id;
+    let book;
     book = await Book.findById(id);
     if(req.cookies.usertype === "user" && book.requestedby !== req.cookies.username)
       return res.status(400).json({});
@@ -83,9 +85,13 @@ const getBookById = async (req, res, next) => {
 };
 
 const requestBook = async (req, res, next) => {
-  const { name, author, description, price } = req.body;
-  let book;
   try {
+    if(!req.cookies || !req.cookies.username)return res.status(400).send("Login first");
+
+    if(req.cookies.usertype !== "user")
+      return res.status(400).json({});
+    const { name, author, description, price } = req.body;
+    let book;
     book = await Book.create({
       name,
       author,
@@ -106,18 +112,25 @@ const requestBook = async (req, res, next) => {
 };
 
 const updateBook = async (req, res, next) => {
-  const id = req.params.id;
-  const { name, author, description, price } = req.body;
-  let book;
   try {
+    if(!req.cookies || !req.cookies.username)return res.status(400).send("Login first");
+    const id = req.params.id;
+    const { name, author, description, price } = req.body;
+    let book;
+
+    book = await Book.findById(id);
+    if((req.cookies.usertype !== "user")|| (req.cookies.usertype === "user" && book.requestedby !== req.cookies.username))
+      return res.status(400).send("Not allowed");
+
     book = await Book.findByIdAndUpdate(id, {
       name,
       author,
       description,
       price,
       bookstate_int: 3,
-      bookstate: "Updated book info to " + JSON.stringify(req.body),
+      bookstate: "Updated book info from "+ JSON.stringify(book) + " to " + JSON.stringify(req.body),
     }, {new: true});
+
     const bookhistory = await insertBookHistory(req.cookies.username, book)
     if(bookhistory == 0)
       return res.status(400).send("Unable to insert book history");
@@ -129,13 +142,14 @@ const updateBook = async (req, res, next) => {
 };
 
 const updateBookStatus = async (req, res, next) => {
-  const id = req.params.id;
-  const { bookstate, bookstate_int } = req.body;
-  let book, newbook;
   try {
+    if(!req.cookies || !req.cookies.username)return res.status(400).send("Login first");
+    const id = req.params.id;
+    const { bookstate, bookstate_int } = req.body;
+    let book, newbook;
     book = await Book.findById(id);
     if((req.cookies.usertype === "user" && book.requestedby !== req.cookies.username) || (req.cookies.usertype === "employee" && book.handledby !== req.cookies.username))
-      return res.status(401).send("Not allowed");
+      return res.status(400).send("Not allowed");
     newbook = await Book.findByIdAndUpdate(id, {
       bookstate,
       bookstate_int,
@@ -146,8 +160,10 @@ const updateBookStatus = async (req, res, next) => {
       return res.status(400).send("Unable to insert book history");
 
     // notify user using email if the book request is either aproved or denied
-    if(bookstate_int === 5 || (req.cookies.usertype === "employee" && bookstate_int === 8))
-      sendEmail(id, bookstate);
+    if(bookstate_int === 5 || (req.cookies.usertype === "employee" && bookstate_int === 8)){
+      const user = await User.findOne({username: req.cookies.username});
+      sendEmail(id, bookstate, user.email);
+    }
     return res.status(200).send("Book status updated");
   } catch (err) {
     console.log(err);
@@ -156,9 +172,12 @@ const updateBookStatus = async (req, res, next) => {
 };
 
 const updateBookHandledBy = async (req, res, next) => {
-  const id = req.params.id;
-  let book;
   try {
+    if(!req.cookies || !req.cookies.username)return res.status(400).send("Login first");
+    if(req.cookies.usertype !== "employee")
+      return res.status(400).send("Not allowed");
+    const id = req.params.id;
+    let book;
     book = await Book.findByIdAndUpdate(id, {
       bookstate_int: 1,
       bookstate: "Book assigned to "+req.cookies.username,
@@ -167,7 +186,7 @@ const updateBookHandledBy = async (req, res, next) => {
     const bookhistory = await insertBookHistory(req.cookies.username, book)
     if(bookhistory == 0)
       return res.status(400).send("Unable to insert book history");
-    return res.status(200).send("Book assigned to "+req.cookies.username+" successfully.");
+    return res.status(200).send("Book assigned to " + req.cookies.username + " successfully.");
   } catch (err) {
     console.log(err);
     return res.status(400).send("Server error. Unable To update book");
