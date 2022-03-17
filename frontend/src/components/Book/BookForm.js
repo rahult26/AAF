@@ -110,7 +110,7 @@ const BookForm = (props) => {
               <textarea className="form-control" name="description" value={input.description} onChange={handleInput} aria-describedby="description" placeholder="Describe the book"  rows="3"></textarea>
             </div>
             <div className="mb-3">
-              <label htmlFor="Price" className="form-label">Price ($)</label>
+              <label htmlFor="Price" className="form-label">Price (£)</label>
               <input type="number" className="form-control" name="price" value={input.price} onChange={handleInput} min="0" max="1000" aria-describedby="price" placeholder="Enter book price" required />
             </div>
             <div className="d-flex justify-content-evenly mt-4">

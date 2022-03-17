@@ -33,7 +33,7 @@ const Login = () => {
         setCookie('jwt', data.jwt);
         setCookie('usertype', data.usertype);
         setCookie('username', data.username);
-        alert("LoggedIn Successfully");
+        alert("Logged in successfully");
         history('/books')
       } else if (res && res.status === 401) {
         alert("Invalid crednetials");

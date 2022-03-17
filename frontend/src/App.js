@@ -50,7 +50,7 @@ function App() {
       <Header auth={cookies.username != null} usertype={cookies.usertype} />
       <Routes>
         <Route path="/" element={<PrivateRoute auth={cookies.username != null} redirectpath="login" />} >
-          <Route exact path="/" element={<PrivateRoute auth={false} redirectpath="/books" />} />>
+          <Route exact path="/" element={<PrivateRoute auth={false} redirectpath="/books" />} />
           <Route exact path="books" element={<Datatable pagetype="home" title="All book requests" />} />
           <Route exact path="bookhistory/:id" element={<Datatable pagetype="bookhistory" title="Book history" />} />
           <Route exact path="books/:id" element={<BookForm pagetype="show" />} />
