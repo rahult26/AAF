@@ -25,3 +25,6 @@ Client: prabal123
 Employee: hestia123
 Admin: rahuldt
 Password for all: tandel123
+14. Links to screencast
+https://youtu.be/xk8pvFPvsRE
+https://youtu.be/M1MGvVGezSo
